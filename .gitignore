@@ -1,0 +1,39 @@
+# === Django ===
+__pycache__/
+*.py[cod]
+*.sqlite3
+db.sqlite3
+
+# === Entornos virtuales ===
+venv/
+env/
+.venv/
+
+# === Archivos estáticos compilados ===
+staticfiles/
+
+# === Archivos temporales ===
+*.log
+*.pot
+*.pyc
+*.pyo
+*.pyd
+*.tmp
+*.temp
+*.swp
+*.bak
+
+# === VSCode ===
+.vscode/
+
+# === Sistema operativo ===
+.DS_Store
+Thumbs.db
+
+# === OneDrive ===
+*.one
+*.lnk
+
+# === Carpetas de sistema ===
+$RECYCLE.BIN/
+System Volume Information/
