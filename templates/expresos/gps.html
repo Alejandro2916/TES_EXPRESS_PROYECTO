@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+
+<h2 style="text-align:center; margin-top:15px; color:white;">
+    GPS en vivo – {{ expreso.nombre }}
+</h2>
+
+<div id="map" style="
+    width: 90%;
+    height: 500px;
+    margin: 20px auto;
+    border-radius: 15px;
+    overflow: hidden;
+"></div>
+
+<a href="{% url 'detalle_expreso' expreso.id %}"
+   class="btn btn-blue"
+   style="max-width:300px; margin:20px auto; display:block;">
+   Volver
+</a>
+
+{% endblock %}
+
+{% block scripts %}
+<!-- Leaflet -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+
+<script>
+    // Coordenada inicial
+    let map = L.map('map').setView([-2.14850, -79.96400], 16);
+
+    // Capa del mapa
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 19
+    }).addTo(map);
+
+    // Icono del bus
+    let busIcon = L.icon({
+        iconUrl: "{% static 'img/bus.png' %}",
+        iconSize: [40, 40]
+    });
+
+    // Marcador del expreso
+    let marcador = L.marker([-2.14850, -79.96400], { icon: busIcon }).addTo(map);
+
+    // Actualizar posición cada 3s
+    setInterval(() => {
+        fetch("{% url 'api_posicion_expreso' expreso.id %}")
+        .then(response => response.json())
+        .then(data => {
+            marcador.setLatLng([data.lat, data.lng]);
+            map.panTo([data.lat, data.lng]);
+        });
+    }, 3000);
+</script>
+
+{% endblock %}

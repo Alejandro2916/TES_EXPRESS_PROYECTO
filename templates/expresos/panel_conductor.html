@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+
+<h2 style="color:white; text-align:center;">Panel del Conductor</h2>
+
+<div style="background:white; padding:25px; border-radius:12px; max-width:800px; margin:auto;">
+
+    <h3>{{ expreso.nombre }}</h3>
+
+    <p><b>Destino:</b> {{ expreso.get_destino_display }}</p>
+    <p><b>Ocupados:</b> {{ ocupados }} / {{ expreso.capacidad }}</p>
+
+    <a href="{% url 'gps_en_vivo' expreso.id %}" class="btn btn-blue">
+        Ver GPS en Vivo
+    </a>
+
+    <a href="{% url 'logout' %}" class="btn btn-red" style="margin-top:20px;">
+        Cerrar Sesión
+    </a>
+
+</div>
+
+{% endblock %}

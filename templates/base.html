@@ -1,0 +1,35 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>TES EXPRESS</title>
+    <link rel="stylesheet" type="text/css" href="{% static 'css/styles.css' %}">
+</head>
+<body>
+
+    <!-- 🔔 BLOQUE DE NOTIFICACIONES INTERNAS -->
+    {% if request.user.is_authenticated %}
+        <div style="background:#ffffff; padding:10px; text-align:center; color:black; border-bottom:1px solid #ccc;">
+            🔔 Notificaciones:
+            <a href="{% url 'ver_notificaciones' %}" style="font-weight:bold; color:#007BFF;">
+                Ver
+            </a>
+        </div>
+    {% endif %}
+    <!-- FIN BLOQUE DE NOTIFICACIONES -->
+
+    <!-- Logo institucional -->
+    <div style="text-align:center; margin-top:20px;">
+        <img src="{% static 'img/logo_tes.png' %}" alt="Logo TES" style="width:180px;">
+    </div>
+
+    {% block content %}
+    {% endblock %}
+
+    <!-- BLOQUE PARA QUE SE EJECUTEN LOS SCRIPTS -->
+    {% block scripts %}
+    {% endblock %}
+
+</body>
+</html>

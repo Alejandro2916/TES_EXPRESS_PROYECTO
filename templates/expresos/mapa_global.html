@@ -1,0 +1,89 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+
+<h2 style="text-align:center; margin-top:15px; color:white;">
+    Mapa Global de Expresos
+</h2>
+
+<div id="mapa"
+     style="width:90%; height:520px; margin:20px auto; border-radius:14px;">
+</div>
+
+{% endblock %}
+
+
+{% block scripts %}
+{{ block.super }}
+
+<link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+
+<script>
+
+const map = L.map('mapa').setView([-2.154796, -79.899255], 13);
+
+L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    maxZoom: 19,
+}).addTo(map);
+
+// Colores por sector
+const colores = {
+    'sur': 'green',
+    'garzota': 'blue',
+    'pascuales': 'orange',
+    'prosperina': 'purple',
+    'atarazana': 'red',
+    'centro': 'yellow'
+};
+
+const busIcon = L.icon({
+    iconUrl: "{% static 'img/bus.png' %}",
+    iconSize: [40, 40]
+});
+
+let markers = {};
+
+function cargarMapa() {
+
+    fetch("{% url 'gps_todos' %}")
+        .then(res => res.json())
+        .then(data => {
+
+            data.buses.forEach(bus => {
+
+                let sector = bus.sector.toLowerCase();
+                let color = colores[sector] || 'black';
+
+                //===== DIBUJAR RUTA =====
+                if (bus.ruta) {
+                    L.polyline(bus.ruta, {
+                        color: color,
+                        weight: 4,
+                        opacity: 0.8
+                    }).addTo(map);
+                }
+
+                //===== MARCADORES =====
+                if (!markers[bus.id]) {
+                    markers[bus.id] = L.marker(bus.posicion, {icon: busIcon})
+                        .addTo(map)
+                        .bindPopup(`<b>${bus.nombre}</b> <br> Sector: ${bus.sector}`);
+                } else {
+                    markers[bus.id].setLatLng(bus.posicion);
+                }
+
+            });
+
+        });
+
+}
+
+// Actualizar cada 2 segundos
+setInterval(cargarMapa, 2000);
+cargarMapa();
+
+</script>
+
+{% endblock %}

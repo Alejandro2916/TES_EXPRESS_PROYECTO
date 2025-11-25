@@ -1,0 +1,211 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+
+<h2 style="text-align:center; margin-top:15px; color:white;">Detalles del Expreso</h2>
+
+<div style="
+    max-width: 900px;
+    margin: 30px auto;
+    background: white;
+    padding: 40px;
+    border-radius: 15px;
+    color: black;
+    font-size: 20px;
+">
+
+    <h3 style="font-size:26px; margin-bottom:20px;">{{ expreso.nombre }}</h3>
+
+    <p><b>Capacidad:</b> {{ expreso.capacidad }} personas</p>
+    <p><b>Sector:</b> {{ expreso.get_destino_display }}</p>
+    <p><b>Hora de salida:</b> {{ expreso.hora_salida }}</p>
+
+    <!-- ⭐ CONTADOR -->
+    <p><b>Sale en:</b>
+        <span id="contador" style="font-weight:bold; color:#007bff;"></span>
+    </p>
+
+    <!-- ⭐ BARRA DE PROGRESO -->
+    <div style="width:100%; background:#d9d9d9; height:12px; border-radius:8px; margin-top:10px;">
+        <div id="barra-progreso"
+            style="height:100%; width:100%; background:#28a745; border-radius:8px; transition:0.5s;">
+        </div>
+    </div>
+
+    <p><b>Ocupados:</b> {{ expreso.ocupados }} / {{ expreso.capacidad }}</p>
+
+    <p><b>Estado:</b>
+        {% if expreso.estado_auto == "verde" %}
+            <span style="color:green;">🟢 Disponible</span>
+        {% elif expreso.estado_auto == "amarillo" %}
+            <span style="color:#c9a700;">🟡 Medio</span>
+        {% else %}
+            <span style="color:red;">🔴 Lleno</span>
+        {% endif %}
+    </p>
+
+    <hr style="margin:20px 0;">
+
+
+    {% if request.user.is_authenticated %}
+        {% if request.user.estudiante.expreso_asignado_id == expreso.id %}
+
+            <p style="font-size:22px; color:green; font-weight:bold;">
+                ✔ Ya estás asignado a este expreso
+            </p>
+
+            <a href="{% url 'dejar_expreso' expreso.id %}"
+               class="btn btn-red"
+               style="font-size:20px; margin-top:10px;">
+                Dejar este expreso
+            </a>
+
+        {% else %}
+
+            {% if expreso.disponible %}
+                <a href="{% url 'tomar_expreso' expreso.id %}"
+                   class="btn btn-green"
+                   style="font-size:20px; margin-top:10px;">
+                    Tomar este expreso
+                </a>
+            {% else %}
+                <button class="btn btn-red" disabled style="font-size:20px; margin-top:10px;">
+                    Expreso lleno
+                </button>
+            {% endif %}
+
+        {% endif %}
+    {% endif %}
+
+    <a href="{% url 'enviar_sugerencia' expreso.id %}"
+       class="btn btn-blue"
+       style="margin-top:25px;">
+        Enviar sugerencia
+    </a>
+
+    <a href="{% url 'home' %}"
+       class="btn btn-blue"
+       style="margin-top:20px;">
+        Volver
+    </a>
+
+    <!-- ⭐ MAPA -->
+    <div id="mapa" style="width:100%; height:350px; margin-top:20px; border-radius:12px;"></div>
+
+</div>
+
+{% endblock %}
+
+<!-- ====================================================== -->
+<!--          ⭐ UN SOLO BLOQUE SCRIPTS CORREGIDO ⭐        -->
+<!-- ====================================================== -->
+
+{% block scripts %}
+{{ block.super }}
+
+<!-- SONIDO -->
+<audio id="alerta" src="{% static 'img/alerta.mp3' %}"></audio>
+
+<script>
+
+    /* ================================
+       CONTADOR + SONIDO + PROGRESO
+    ================================= */
+    let tiempo = Number("{{ segundos_restantes|default:0 }}");
+    const inicioTiempo = tiempo;
+    const sonido = document.getElementById("alerta");
+
+    function actualizarContador() {
+        const el = document.getElementById("contador");
+        const barra = document.getElementById("barra-progreso");
+
+        if (!el || !barra) return;
+
+        if (tiempo <= 0) {
+            el.innerHTML = "🚌 Expreso partió";
+            barra.style.width = "0%";
+            barra.style.background = "gray";
+            return;
+        }
+
+        let h = Math.floor(tiempo / 3600);
+        let m = Math.floor((tiempo % 3600) / 60);
+        let s = tiempo % 60;
+
+        let txt = "";
+        if (h > 0) txt += h + "h ";
+        if (m > 0) txt += m + "m ";
+        txt += s + "s";
+
+        el.innerHTML = txt;
+
+        if (tiempo > 600) el.style.color = "green";
+        else if (tiempo > 300) el.style.color = "#d1b000";
+        else el.style.color = "red";
+
+        if (tiempo <= 60)
+            el.style.opacity = (tiempo % 2 === 0) ? "1" : "0.3";
+        else
+            el.style.opacity = "1";
+
+        let porcentaje = (tiempo / inicioTiempo) * 100;
+        barra.style.width = porcentaje + "%";
+
+        if (tiempo < inicioTiempo * 0.30) barra.style.background = "#ff4d4d";
+        else if (tiempo < inicioTiempo * 0.60) barra.style.background = "#f1c40f";
+        else barra.style.background = "#28a745";
+
+        if (tiempo === 30) sonido.play();
+
+        tiempo--;
+    }
+
+    setInterval(actualizarContador, 1000);
+    actualizarContador();
+
+</script>
+
+<!-- ================================
+     MAPA EN VIVO DEL EXPRESO
+================================ -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+
+<script>
+
+    const map = L.map('mapa').setView([-2.154796, -79.899255], 14);
+
+    L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 19,
+    }).addTo(map);
+
+    const busIcon = L.icon({
+        iconUrl: "{% static 'img/bus.png' %}",
+        iconSize: [40, 40]
+    });
+
+    let marker = L.marker([-2.154796, -79.899255], {icon: busIcon}).addTo(map);
+
+    fetch("{% url 'gps_ruta' expreso.id %}")
+        .then(res => res.json())
+        .then(data => {
+            if (!data.ruta) return;
+
+            let puntos = data.ruta;
+
+            L.polyline(puntos, { color: "blue", weight: 4 }).addTo(map);
+
+            let index = 0;
+
+            setInterval(() => {
+                if (index < puntos.length) {
+                    marker.setLatLng(puntos[index]);
+                    map.panTo(puntos[index]);
+                    index++;
+                }
+            }, 1500);
+        });
+</script>
+
+{% endblock %}

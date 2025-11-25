@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% block content %}
+
+<h2 style="text-align:center;">Enviar sugerencia</h2>
+
+<div style="max-width:600px; margin:auto; padding:20px; border:1px solid #ccc; border-radius:8px;">
+
+    <h3>{{ expreso.nombre }}</h3>
+
+    <p>Puedes enviar una sugerencia sobre horarios, rutas o mejoras relacionadas con este expreso.</p>
+
+    <form method="POST">
+        {% csrf_token %}
+        
+        <label><b>Tu sugerencia:</b></label>
+        <textarea name="mensaje" rows="5" 
+                  style="width:100%; padding:10px; border-radius:5px; border:1px solid #aaa;"></textarea>
+
+        <button type="submit" 
+                style="width:100%; margin-top:15px; padding:12px; background:green; color:white; 
+                       border:none; border-radius:6px; font-size:18px;">
+            Enviar
+        </button>
+    </form>
+
+    <a href="/expreso/{{ expreso.id }}/">
+        <button style="width:100%; margin-top:10px; padding:12px; background:#007bff; color:white;
+                       border:none; border-radius:6px; font-size:18px;">
+            Volver
+        </button>
+    </a>
+
+</div>
+
+{% endblock %}

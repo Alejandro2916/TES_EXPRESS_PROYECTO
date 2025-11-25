@@ -1,0 +1,106 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+
+<h2 style="text-align:center; margin-top:20px; color:white;">Mi Panel</h2>
+
+<div style="
+    max-width:900px;
+    margin:25px auto;
+    background:white;
+    padding:30px;
+    border-radius:15px;
+">
+
+    <h3 style="font-size:28px;">Hola, {{ estudiante.user.first_name }} 👋</h3>
+
+    <p><b>Usuario:</b> {{ estudiante.user.username }}</p>
+    <p><b>Correo:</b> {{ estudiante.user.email }}</p>
+
+    <hr>
+
+    {% if expreso %}
+    <h3>🚍 Tu expreso asignado: <span style="color:#0066ff">{{ expreso.nombre }}</span></h3>
+
+    <p><b>Hora de salida:</b> {{ expreso.hora_salida }}</p>
+
+    <p><b>Estado:</b>
+        {% if expreso.estado_auto == "verde" %}
+            <span style="color:green;">🟢 Disponible</span>
+        {% elif expreso.estado_auto == "amarillo" %}
+            <span style="color:#d1b000;">🟡 Medio</span>
+        {% else %}
+            <span style="color:red;">🔴 Lleno</span>
+        {% endif %}
+    </p>
+
+    <p><b>Sale en:</b>
+        <span id="contador" style="font-weight:bold; color:#007bff;"></span>
+    </p>
+
+    <a href="{% url 'gps_en_vivo' expreso.id %}" class="btn btn-blue" style="margin-top:10px;">
+        Ver GPS en vivo
+    </a>
+
+    <a href="{% url 'home' %}" class="btn btn-red" style="margin-top:10px;">
+        Cambiar expreso
+    </a>
+
+    {% else %}
+    <h3 style="color:red;">⚠ No estás asignado a ningún expreso</h3>
+
+    <a href="{% url 'home' %}" class="btn btn-blue">
+        Elegir un expreso
+    </a>
+    {% endif %}
+
+    <hr>
+
+    <h3>🔔 Notificaciones recientes</h3>
+
+    {% if notificaciones %}
+        <ul>
+            {% for n in notificaciones %}
+            <li>{{ n.mensaje }}</li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <p>No tienes notificaciones.</p>
+    {% endif %}
+
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+    let tiempo = Number("{{ segundos_restantes|default:0 }}");
+
+    function actualizarContador() {
+        const el = document.getElementById("contador");
+        if (!el) return;
+
+        if (tiempo <= 0) {
+            el.innerHTML = "🚌 El expreso ya salió";
+            return;
+        }
+
+        let h = Math.floor(tiempo / 3600);
+        let m = Math.floor((tiempo % 3600) / 60);
+        let s = tiempo % 60;
+
+        let txt = "";
+        if (h > 0) txt += h + "h ";
+        if (m > 0) txt += m + "m ";
+        txt += s + "s";
+
+        el.innerHTML = txt;
+
+        tiempo--;
+    }
+
+    actualizarContador();
+    setInterval(actualizarContador, 1000);
+</script>
+{% endblock %}
